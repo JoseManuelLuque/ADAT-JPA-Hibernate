@@ -9,7 +9,7 @@ class DepartamentoRepository {
     /*
     CRUD de Departameento
     Excepciones ? ¿Se puede hacer Rollback?
-    EntityManagerFactory creandose muchas vees = ¿Cómo lo solucionariais?
+    EntityManagerFactory creándose muchas veces = ¿Cómo lo solucionarais?
      */
 
     fun insertDpto(dpto: Departamento) {
