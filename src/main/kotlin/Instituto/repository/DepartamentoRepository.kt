@@ -12,8 +12,12 @@ class DepartamentoRepository {
     EntityManagerFactory creándose muchas veces = ¿Cómo lo solucionarais?
      */
 
+    // Declaración del EntityManagerFactory como companion objet para ejecutarlo una vez y reutilizarlo
+    companion object {
+       private val emf: EntityManagerFactory = Persistence.createEntityManagerFactory("unidadMySQL")
+    }
+
     fun insertDpto(dpto: Departamento) {
-        val emf: EntityManagerFactory = Persistence.createEntityManagerFactory("unidadMySQL")
         val em: EntityManager = emf.createEntityManager()
 
         em.transaction.begin()
@@ -23,28 +27,29 @@ class DepartamentoRepository {
     }
 
     fun deleteDpto(id: Long) {
-        val emf: EntityManagerFactory = Persistence.createEntityManagerFactory("unidadMySQL")
         val em: EntityManager = emf.createEntityManager()
 
-        val dptoDelete = em.find(Departamento::class.java, id)
+        try {
+            val dptoDelete = em.find(Departamento::class.java, id)
 
-        em.transaction.begin()
-        em.remove(dptoDelete)
-        em.transaction.commit()
-        em.close()
+            if (dptoDelete != null) {
+                em.transaction.begin()
+                em.remove(dptoDelete)
+                em.transaction.commit()
+            } else {
+                println("Departamento con id $id no encontrado")
+            }
+        } catch (e: Exception) {
+            em.transaction.rollback()
+            println("Error al eliminar el departamento: ${e.message}")
+        } finally {
+            if (em.isOpen) {
+                em.close()
+            }
+        }
     }
 
     fun readDpto(id: Long): String {
-//        val emf: EntityManagerFactory = Persistence.createEntityManagerFactory("unidadMySQL")
-//        val em: EntityManager = emf.createEntityManager()
-//        val FindDpto = em.find(Departamento::class.java, id)
-//        em.transaction.begin()
-//        FindDpto
-//        em.transaction.commit()
-//        em.close()
-//        return FindDpto.toString()
-
-        val emf: EntityManagerFactory = Persistence.createEntityManagerFactory("unidadMySQL")
         val em: EntityManager = emf.createEntityManager()
 
         return try {
@@ -55,23 +60,34 @@ class DepartamentoRepository {
                 "Departamento no encontrado"
             }
         } catch (e: Exception) {
-            "Error: ${e.message}"
+            "Error al leer el departamento: ${e.message}"
         } finally {
-            em.close()
-            emf.close()
+            if (em.isOpen) {
+                em.close()
+            }
         }
     }
 
-    fun UpdateDpto(id : String) {
-        val emf: EntityManagerFactory = Persistence.createEntityManagerFactory("departamento")
+    fun updateDpto(id : Long, nuevoNombre: String) {
         val em: EntityManager = emf.createEntityManager()
 
-        val FindDpto = em.find(Departamento::class.java, id)
-
-        em.transaction.begin()
-
-
-        em.transaction.commit()
-        em.close()
+        try {
+            val dpto: Departamento = em.find(Departamento::class.java, id)
+            if (dpto != null) {
+                em.transaction.begin()
+                dpto.nombre = nuevoNombre
+                em.merge(dpto)
+                em.transaction.commit()
+            } else {
+                println("Departamento no encontrado")
+            }
+        } catch (e: Exception) {
+            em.transaction.rollback()
+            println("Error al actualizar departamento: ${e.message}")
+        } finally {
+            if (em.isOpen) {
+                em.close()
+            }
+        }
     }
 }
